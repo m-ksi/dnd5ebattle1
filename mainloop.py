@@ -2,74 +2,68 @@ import arcade
 import math
 import settings
 
-height = settings.SCREEN_HEIGHT
-width = settings.SCREEN_WIDTH
+
+WIDTH = 20
+HEIGHT = 20
+MARGIN = 5
+ROW_COUNT = 10
+COLUMN_COUNT = 10
+SCREEN_WIDTH = WIDTH * COLUMN_COUNT + MARGIN * (COLUMN_COUNT + 1)
+SCREEN_HEIGHT = HEIGHT * ROW_COUNT + MARGIN * (ROW_COUNT + 1)
 
 
-class Game(arcade.Window):
+class MyGame(arcade.Window):
+    """
+    Main application class.
+    """
 
-    def __init__(self, width, height, title):
-        # call window initializer
-        super().__init__(width, height, title)
+    def __init__(self, width, height):
+        super().__init__(width, height)
 
-        self.player_list = None
-        self.target_list = None
+        self.grid = [[0 for x in range(10)] for y in range(10)]
+        self.grid[1][5] = 1
 
-        # player info
-        self.player_sprite = None
-        self.target_sprite = None
+        arcade.set_background_color(arcade.color.BLACK)
 
-        self.set_mouse_visible(True)
-        arcade.set_background_color(arcade.color.AMAZON)
+        self.grid_shape_list = None
+        self.create_shapes_from_grid()
 
-    def setup(self):
-        self.player_list = arcade.SpriteList()
-        self.player_sprite = arcade.Sprite("character.png", 0.5)
-        self.player_sprite.center_x = 50
-        self.player_sprite.center_y = 50
-        self.player_list.append(self.player_sprite)
-
-        self.target_list = arcade.SpriteList()
+    def create_shapes_from_grid(self):
+        self.grid_shape_list = arcade.ShapeElementList()
+        for row in range(ROW_COUNT):
+            for column in range(COLUMN_COUNT):
+                x = MARGIN + WIDTH / 2 + (WIDTH + MARGIN) * column
+                y = MARGIN + HEIGHT / 2 + (HEIGHT + MARGIN) * row
+                color = arcade.color.WHITE
+                if self.grid[row][column] == 1:
+                    color = arcade.color.GREEN
+                rect = arcade.create_rectangle_filled(x, y, WIDTH, HEIGHT, color)
+                self.grid_shape_list.append(rect)
 
     def on_draw(self):
+        """
+        Render the screen.
+        """
         arcade.start_render()
-        self.target_list.draw()
-        self.player_list.draw()
+        self.grid_shape_list.draw()
 
-    def on_mouse_press(self, x, y, button, modifiers):
-        if button == arcade.MOUSE_BUTTON_LEFT and len(self.target_list) == 0:
-            target = arcade.Sprite("target.png", 0.3)
-            target.center_x = x
-            target.center_y = y
+    def on_mouse_press(self, x, y, button, key_modifiers):
+        """
+        Called when the user presses a mouse button.
+        """
+        column = int(x // (MARGIN + WIDTH))
+        row = int(y // (MARGIN + HEIGHT))
+        if self.grid[row][column] == 0:
+            self.grid[row][column] = 1
+        else:
+            self.grid[row][column] = 0
 
-            self.target_list.append(target)
-
-    def on_update(self, delta_time):
-        self.player_list.update()
-        self.target_list.update()
-
-        if self.target_list is not None:
-            for target in self.target_list:
-                start_x = self.player_sprite.center_x
-                start_y = self.player_sprite.center_y
-                dest_x = target.center_x
-                dest_y = target.center_y
-                x_diff = dest_x - start_x
-                y_diff = dest_y - start_y
-                angle = math.atan2(y_diff, x_diff)
-                self.player_sprite.change_x = math.cos(angle) * 3
-                self.player_sprite.change_y = math.sin(angle) * 3
-                if (abs(self.player_sprite.center_x - dest_x) < 3) and \
-                        (abs(self.player_sprite.center_y - dest_y) < 3):
-                    self.player_sprite.change_x = 0
-                    self.player_sprite.change_y = 0
-                    target.remove_from_sprite_lists()
+        self.create_shapes_from_grid()
 
 
 def main():
-    """ Main method"""
-    window = Game(width, height, "Example")
-    window.setup()
+
+    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT)
     arcade.run()
 
 
