@@ -43,23 +43,6 @@ class Game(arcade.Window):
             target.center_y = y
 
             self.target_list.append(target)
-            '''start_x = self.player_sprite.center_x
-            start_y = self.player_sprite.center_y
-            dest_x = x
-            dest_y = y
-            self.dest_x = x
-            self.dest_y = y
-            x_diff = dest_x - start_x
-            y_diff = dest_y - start_y
-            angle = math.atan2(y_diff, x_diff)
-            self.player_sprite.change_x = math.cos(angle) * 2
-            self.player_sprite.change_y = math.sin(angle) * 2
-            if (abs(self.player_sprite.center_x - dest_x) < 2) and \
-                    (abs(self.player_sprite.center_y - dest_y) < 2):
-                print('here!')
-                self.player_sprite.change_x = 0
-                self.player_sprite.change_y = 0
-                return'''
 
     def on_update(self, delta_time):
         self.player_list.update()
@@ -81,23 +64,6 @@ class Game(arcade.Window):
                     self.player_sprite.change_x = 0
                     self.player_sprite.change_y = 0
                     target.remove_from_sprite_lists()
-
-
-'''def mov(sprite, x, y):
-    start_x = sprite.center_x
-    start_y = sprite.center_y
-    dest_x = x
-    dest_y = y
-    x_diff = dest_x - start_x
-    y_diff = dest_y - start_y
-    angle = math.atan2(y_diff, x_diff)
-    while (abs(sprite.center_x - dest_x) >= 2) and \
-            (abs(sprite.center_y - dest_y) >= 2):
-        sprite.change_x = math.cos(angle) * 2
-        sprite.change_y = math.sin(angle) * 2
-    sprite.change_x = 0
-    sprite.change_y = 0
-    return'''
 
 
 def main():
