@@ -3,6 +3,10 @@ import settings
 from grid import map_grid
 from grid import path_grid
 from grid import chars_grid
+import math
+from character import char
+import mainfuncs
+# import bestiary
 
 SCREEN_WIDTH = settings.SCREEN_WIDTH
 SCREEN_HEIGHT = SCREEN_WIDTH // 16 * 9
@@ -26,34 +30,22 @@ class MyGame(arcade.Window):
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
 
+        self.char = char
         self.grid_sprite_list = None
+        self.button_sprite_list = None
+        self.char_sprite = None
         self.chars_sprite_list = None
-        self.draw_grid_sprites()
-        self.draw_chars()
+        self.target_list = None
 
-    def draw_chars(self):
+    def setup(self):
+        self.char_sprite = arcade.Sprite(self.char.sprite, 8 / 3)
         self.chars_sprite_list = arcade.SpriteList()
-        for row in range(7):
-            for column in range(13):
-                if chars_grid[row][column] == 1:
-                    char_sprite = arcade.Sprite('char.png', 8/3)
-                    char_sprite.center_x = bot_left_x + column * step
-                    char_sprite.center_y = bot_left_y + row * step
-                    self.chars_sprite_list.append(char_sprite)
+        self.chars_sprite_list.append(self.char_sprite)
 
-    def draw_grid_sprites(self):
+        self.target_list = arcade.SpriteList()
         self.grid_sprite_list = arcade.SpriteList()
-        for row in range(7):
-            for column in range(13):
-                if map_grid[row][column] == 1:
-                    rect_sprite = arcade.Sprite('grass.jpg', 8/3)
-                elif map_grid[row][column] == 2:
-                    rect_sprite = arcade.Sprite('swamp.jpg', 8/3)
-                else:
-                    rect_sprite = arcade.Sprite('rocks.jpg', 8/3)
-                rect_sprite.center_x = bot_left_x + column * step
-                rect_sprite.center_y = bot_left_y + row * step
-                self.grid_sprite_list.append(rect_sprite)
+        mainfuncs.draw_grid_sprites(self.grid_sprite_list, map_grid, bot_left_x, bot_left_y, step)
+        mainfuncs.draw_chars(chars_grid, self.char_sprite, bot_left_x, bot_left_y, step)
 
     def on_draw(self):
         """
@@ -63,22 +55,37 @@ class MyGame(arcade.Window):
         arcade.start_render()
         arcade.draw_rectangle_filled(FIELD_CENTER_X, FIELD_CENTER_Y, FIELD_WIDTH, FIELD_HEIGHT, arcade.color.BLACK)
         self.grid_sprite_list.draw()
+        self.target_list.draw()
         self.chars_sprite_list.draw()
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         """
         Called when the user presses a mouse button.
         """
-        if (bot_left_x - rect_width // 2) < x < (bot_left_x + 12 * step + rect_width // 2) and (
-                bot_left_y - rect_width // 2) < y < (bot_left_y + 6 * step + rect_width // 2):
+        if button == arcade.MOUSE_BUTTON_LEFT and len(self.target_list) == 0 and (bot_left_x - rect_width // 2) < x < (
+                bot_left_x + 12 * step + rect_width // 2) and (bot_left_y - rect_width // 2) < y < (bot_left_y + 6 *
+                                                                                                    step + rect_width
+                                                                                                    // 2):
             grid_column = int((x - (bot_left_x - rect_width // 2)) // step)
             grid_row = int((y - (bot_left_y - rect_width // 2)) // step)
-            print(int(bot_left_x + grid_column * step), int(bot_left_y + grid_row * step))
+
+            target = arcade.Sprite("target.png", 0.5)
+            target.center_x = int(bot_left_x + grid_column * step)
+            target.center_y = int(bot_left_y + grid_row * step)
+            self.target_list.append(target)
+
+    def on_update(self, delta_time: float):
+        self.chars_sprite_list.update()
+        self.grid_sprite_list.update()
+        self.target_list.update()
+
+        mainfuncs.find_path(self.target_list, self.char_sprite)
 
 
 def main():
 
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, 'Test')
+    window.setup()
     arcade.run()
 
 
