@@ -14,8 +14,8 @@ spell_slots = (0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
 class Character(Creature):
-    def __init__(self, s, h, a, spe, sp_t, atr, aac, so):
-        super().__init__(s, h, a, spe, sp_t, atr, aac, so)
+    def __init__(self, n, s, h, a, spe, sp_t, atr, aac, so):
+        super().__init__(n, s, h, a, spe, sp_t, atr, aac, so)
 
 
-char = Character(sprite, hp, ac, sp, 'walk', att, attacks, '')
+char = Character('Leroy', sprite, hp, ac, sp, 'walk', att, attacks, '')

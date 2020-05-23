@@ -12,5 +12,5 @@ attacks = [['claws', 1, '1d8', 'slashing', 0, '', ''],
 sound = ''
 
 
-class Succubus(Creature(sprite, hp, ac, sp, sp_type, att, attacks, sound)):
+class Succubus(Creature('Succubus', sprite, hp, ac, sp, sp_type, att, attacks, sound)):
     pass

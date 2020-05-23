@@ -4,7 +4,8 @@ import random
 
 class Creature:
 
-    def __init__(self, sprite, hp, ac, sp, sp_type, att, attacks, sound):
+    def __init__(self, name, sprite, hp, ac, sp, sp_type, att, attacks, sound):
+        self.name = name
         self.sprite = sprite
         self.hp = hp  # health
         self.ac = ac  # armor class

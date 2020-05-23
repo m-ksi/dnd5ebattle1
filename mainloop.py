@@ -3,7 +3,6 @@ import settings
 from grid import map_grid
 from grid import path_grid
 from grid import chars_grid
-import math
 from character import char
 import mainfuncs
 # import bestiary
@@ -18,6 +17,7 @@ FIELD_CENTER_Y = 5 * SCREEN_HEIGHT // 9
 step = int(rect_width + (rect_width / 20))
 bot_left_x = FIELD_CENTER_X - 6 * step
 bot_left_y = FIELD_CENTER_Y - 3 * step
+turn_mode = [1, 0]  # 1 - your turn; 1 - choose attack, 2 - choose bonus, 3 - choose movement, 4 - choose spell
 
 
 class MyGame(arcade.Window):
@@ -36,54 +36,89 @@ class MyGame(arcade.Window):
         self.char_sprite = None
         self.chars_sprite_list = None
         self.target_list = None
+        self.availability_list = None
 
     def setup(self):
         self.char_sprite = arcade.Sprite(self.char.sprite, 8 / 3)
         self.chars_sprite_list = arcade.SpriteList()
         self.chars_sprite_list.append(self.char_sprite)
 
-        self.target_list = arcade.SpriteList()
-        self.grid_sprite_list = arcade.SpriteList()
+        self.availability_list = arcade.SpriteList()  # cells available to choose
+        self.button_sprite_list = arcade.SpriteList()  # all buttons
+        self.target_list = arcade.SpriteList()  # targets to follow
+        self.grid_sprite_list = arcade.SpriteList()  # map
         mainfuncs.draw_grid_sprites(self.grid_sprite_list, map_grid, bot_left_x, bot_left_y, step)
         mainfuncs.draw_chars(chars_grid, self.char_sprite, bot_left_x, bot_left_y, step)
+        mainfuncs.draw_buttons(self.button_sprite_list, bot_left_y, SCREEN_WIDTH)
 
     def on_draw(self):
         """
         Render the screen.
         """
-
         arcade.start_render()
         arcade.draw_rectangle_filled(FIELD_CENTER_X, FIELD_CENTER_Y, FIELD_WIDTH, FIELD_HEIGHT, arcade.color.BLACK)
+        self.button_sprite_list.draw()
         self.grid_sprite_list.draw()
         self.target_list.draw()
         self.chars_sprite_list.draw()
+        self.availability_list.draw()
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         """
         Called when the user presses a mouse button.
         """
-        if button == arcade.MOUSE_BUTTON_LEFT and len(self.target_list) == 0 and (bot_left_x - rect_width // 2) < x < (
+        '''if button == arcade.MOUSE_BUTTON_LEFT and len(self.target_list) == 0 and (bot_left_x - rect_width // 2) < x < (
                 bot_left_x + 12 * step + rect_width // 2) and (bot_left_y - rect_width // 2) < y < (bot_left_y + 6 *
                                                                                                     step + rect_width
                                                                                                     // 2):
-            grid_column = int((x - (bot_left_x - rect_width // 2)) // step)
-            grid_row = int((y - (bot_left_y - rect_width // 2)) // step)
-
+            cell_center = mainfuncs.get_cell_center(x, y, bot_left_x, bot_left_y, rect_width, step)
             target = arcade.Sprite("target.png", 0.5)
-            target.center_x = int(bot_left_x + grid_column * step)
-            target.center_y = int(bot_left_y + grid_row * step)
-            self.target_list.append(target)
+            target.center_x = cell_center[0]
+            target.center_y = cell_center[1]
+            self.target_list.append(target)'''
+        if button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and ((x - (SCREEN_WIDTH // 5 * 3)) ** 2 + (y - (int(
+                bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # movement mode
+            if turn_mode[1] != 3:
+                turn_mode[1] = 3
+                mainfuncs.draw_available_moves(char, path_grid, chars_grid, self.availability_list, bot_left_x,
+                                               bot_left_y, step)
+            else:
+                turn_mode[1] = 0
+        elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and ((x - (SCREEN_WIDTH // 5)) ** 2 + (y - (
+                int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # attack mode
+            if turn_mode[1] != 1:
+                turn_mode[1] = 1
+            else:
+                turn_mode[1] = 0
+        elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and ((x - (SCREEN_WIDTH // 5 * 2)) ** 2 + (y - (
+                int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # bonus mode
+            if turn_mode[1] != 2:
+                turn_mode[1] = 2
+            else:
+                turn_mode[1] = 0
 
     def on_update(self, delta_time: float):
+        if turn_mode[1] == 1:
+            self.availability_list = None
+            self.availability_list = arcade.SpriteList()
+        elif turn_mode[1] == 2:
+            self.availability_list = None
+            self.availability_list = arcade.SpriteList()
+        elif turn_mode[1] == 3:
+            pass
+        elif turn_mode[1] == 0:
+            self.availability_list = None
+            self.availability_list = arcade.SpriteList()
         self.chars_sprite_list.update()
         self.grid_sprite_list.update()
         self.target_list.update()
+        self.button_sprite_list.update()
+        self.availability_list.update()
 
-        mainfuncs.find_path(self.target_list, self.char_sprite)
+        # mainfuncs.find_path(self.target_list, self.char_sprite)
 
 
 def main():
-
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, 'Test')
     window.setup()
     arcade.run()
