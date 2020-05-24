@@ -51,6 +51,10 @@ class MyGame(arcade.Window):
         mainfuncs.draw_chars(chars_grid, self.char_sprite, bot_left_x, bot_left_y, step)
         mainfuncs.draw_buttons(self.button_sprite_list, bot_left_y, SCREEN_WIDTH)
 
+    def empty_a_list(self):
+        self.availability_list = None
+        self.availability_list = arcade.SpriteList()
+
     def on_draw(self):
         """
         Render the screen.
@@ -78,6 +82,7 @@ class MyGame(arcade.Window):
             self.target_list.append(target)'''
         if button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and ((x - (SCREEN_WIDTH // 5 * 3)) ** 2 + (y - (int(
                 bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # movement mode
+            self.empty_a_list()
             if turn_mode[1] != 3:
                 turn_mode[1] = 3
                 mainfuncs.draw_available_moves(char, path_grid, chars_grid, self.availability_list, bot_left_x,
@@ -86,36 +91,42 @@ class MyGame(arcade.Window):
                 turn_mode[1] = 0
         elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and ((x - (SCREEN_WIDTH // 5)) ** 2 + (y - (
                 int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # attack mode
+            self.empty_a_list()
             if turn_mode[1] != 1:
                 turn_mode[1] = 1
             else:
                 turn_mode[1] = 0
         elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and ((x - (SCREEN_WIDTH // 5 * 2)) ** 2 + (y - (
                 int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # bonus mode
+            self.empty_a_list()
             if turn_mode[1] != 2:
                 turn_mode[1] = 2
             else:
                 turn_mode[1] = 0
+        elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[0] == 1 and turn_mode[1] == 3 and char.sp > 0:
+            r = mainfuncs.get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, self.availability_list)
+            if r != -1:
+                mainfuncs.draw_path(self.target_list, r[0], r[1], path_grid, bot_left_x, bot_left_y, step, chars_grid)
+                self.empty_a_list()
+                turn_mode[1] = 0
 
     def on_update(self, delta_time: float):
         if turn_mode[1] == 1:
-            self.availability_list = None
-            self.availability_list = arcade.SpriteList()
+            pass
         elif turn_mode[1] == 2:
-            self.availability_list = None
-            self.availability_list = arcade.SpriteList()
+            pass
         elif turn_mode[1] == 3:
             pass
         elif turn_mode[1] == 0:
-            self.availability_list = None
-            self.availability_list = arcade.SpriteList()
+            pass
         self.chars_sprite_list.update()
         self.grid_sprite_list.update()
         self.target_list.update()
         self.button_sprite_list.update()
         self.availability_list.update()
 
-        # mainfuncs.find_path(self.target_list, self.char_sprite)
+        if turn_mode[0] == 1:
+            mainfuncs.follow_target(self.target_list, self.char_sprite)
 
 
 def main():

@@ -101,22 +101,22 @@ def fill_weights(diagram, grid):
                 x = grid[i][j]
             else:
                 continue
-            if i - 1 >= 0:
-                if j - 1 >= 0:
-                    diagram.weights[(i, j), (i - 1, j - 1)] = x
-                diagram.weights[(i, j), (i - 1, j)] = x
-                if j + 1 <= 6:
-                    diagram.weights[(i, j), (i - 1, j + 1)] = x
-            if i + 1 <= 12:
-                if j - 1 >= 0:
-                    diagram.weights[(i, j), (i + 1, j - 1)] = x
-                diagram.weights[(i, j), (i + 1, j)] = x
-                if j + 1 <= 6:
-                    diagram.weights[(i, j), (i + 1, j + 1)] = x
             if j - 1 >= 0:
-                diagram.weights[(i, j), (i, j - 1)] = x
-            if j + 1 <= 7:
-                diagram.weights[(i, j), (i, j + 1)] = x
+                if i - 1 >= 0:
+                    diagram.weights[(j - 1, i - 1), (j, i)] = x
+                diagram.weights[(j - 1, i), (j, i)] = x
+                if i + 1 <= 6:
+                    diagram.weights[(j - 1, i + 1), (j, i)] = x
+            if j + 1 <= 12:
+                if i - 1 >= 0:
+                    diagram.weights[(j + 1, i - 1), (j, i)] = x
+                diagram.weights[(j + 1, i), (j, i)] = x
+                if i + 1 <= 6:
+                    diagram.weights[(j + 1, i + 1), (j, i)] = x
+            if i - 1 >= 0:
+                diagram.weights[(j, i - 1), (j, i)] = x
+            if i + 1 <= 7:
+                diagram.weights[(j, i + 1), (j, i)] = x
 
 
 def find_path(path_grid, pos, res):
@@ -131,3 +131,29 @@ def find_path(path_grid, pos, res):
     path, costs = a_star(grid_diagram, pos, res)
     return path, costs, grid_diagram
 
+
+from grid import path_grid
+from implementation import draw_grid
+a, b, c = find_path(path_grid, (6, 2), (6, 6))
+print(c.weights)
+print(a)
+print(c)
+draw_grid(c, width=3, point_to=a, start=(6, 2), goal=(6, 6))
+
+'''            if j - 1 >= 0:
+                if i - 1 >= 0:
+                    diagram.weights[(j, i), (j - 1, i - 1)] = x
+                diagram.weights[(j, i), (j - 1, i)] = x
+                if i + 1 <= 6:
+                    diagram.weights[(j, i), (j - 1, i + 1)] = x
+            if j + 1 <= 12:
+                if i - 1 >= 0:
+                    diagram.weights[(j, i), (j + 1, i - 1)] = x
+                diagram.weights[(j, i), (j + 1, i)] = x
+                if i + 1 <= 6:
+                    diagram.weights[(j, i), (j + 1, i + 1)] = x
+            if i - 1 >= 0:
+                diagram.weights[(j, i), (j, i - 1)] = x
+            if i + 1 <= 7:
+                diagram.weights[(j, i), (j, i + 1)] = x
+'''

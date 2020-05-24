@@ -1,8 +1,9 @@
 import math
 import arcade
 from pathfinder import find_path
-'''
-def find_path(t_list, char_sprite):
+
+
+def follow_target(t_list, char_sprite):
     if t_list is not None:
         for target in t_list:
             start_x = char_sprite.center_x
@@ -21,7 +22,6 @@ def find_path(t_list, char_sprite):
                 char_sprite.center_x = target.center_x
                 char_sprite.center_y = target.center_y
                 target.remove_from_sprite_lists()
-'''
 
 
 def draw_grid_sprites(grid_sprite_list, map_grid, bot_left_x, bot_left_y, step):
@@ -50,6 +50,16 @@ def get_cell_center(x, y, bot_left_x, bot_left_y, rect_width, step):
     grid_column = int((x - (bot_left_x - rect_width // 2)) // step)
     grid_row = int((y - (bot_left_y - rect_width // 2)) // step)
     return [int(bot_left_x + grid_column * step), int(bot_left_y + grid_row * step)]
+
+
+def get_cell_center_by_r_c(row, column, bot_left_x, bot_left_y, step):
+    return [int(bot_left_x + column * step), int(bot_left_y + row * step)]
+
+
+def get_cell_r_c(x, y, bot_left_x, bot_left_y, rect_width, step):
+    grid_column = int((x - (bot_left_x - rect_width // 2)) // step)
+    grid_row = int((y - (bot_left_y - rect_width // 2)) // step)
+    return [grid_row, grid_column]
 
 
 def draw_buttons(button_sprite_list, bot_left_y, screen_width):
@@ -95,3 +105,39 @@ def draw_available_moves(char, path_grid, chars_grid, a_list, bot_left_x, bot_le
                             a_sprite.center_x = bot_left_x + i * step
                             a_sprite.center_y = bot_left_y + j * step
                             a_list.append(a_sprite)
+
+
+def get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, availability_list):
+    for ter in availability_list:
+        cen_x, cen_y = get_cell_center(x, y, bot_left_x, bot_left_y, rect_width, step)
+        if cen_x == ter.center_x and cen_y == ter.center_y:
+            r = rect_width // 2
+            if cen_x - r <= x <= cen_x + r and cen_y - r <= y <= cen_y + r:
+                return get_cell_r_c(x, y, bot_left_x, bot_left_y, rect_width, step)
+    return -1
+
+
+def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_grid):
+    c_row, c_column = find_char(chars_grid)
+    a = find_path(path_grid, (c_column, c_row), (column, row))[0]
+    current = [column, row]
+    chars_grid[c_row][c_column] = 0
+    chars_grid[row][column] = 1
+    while a[(current[0], current[1])] is not None:
+        center = get_cell_center_by_r_c(current[1], current[0], bot_left_x, bot_left_y, step)
+        target = arcade.Sprite("target.png", 0.5)
+        target.center_x = center[0]
+        target.center_y = center[1]
+        target_list.append(target)
+        current = a[(current[0], current[1])]
+
+
+def find_char(chars_grid):
+    char_row = -1
+    char_column = -1
+    for i in range(13):
+        for j in range(7):
+            if chars_grid[j][i] == 1:
+                char_row = j
+                char_column = i
+    return char_row, char_column
