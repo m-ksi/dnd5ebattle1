@@ -38,12 +38,17 @@ def draw_grid_sprites(grid_sprite_list, map_grid, bot_left_x, bot_left_y, step):
             grid_sprite_list.append(rect_sprite)
 
 
-def draw_chars(chars_grid, char_sprite, bot_left_x, bot_left_y, step):
-    for row in range(7):
-        for column in range(13):
-            if chars_grid[row][column] == 1:
-                char_sprite.center_x = bot_left_x + column * step
-                char_sprite.center_y = bot_left_y + row * step
+def draw_chars(chars_grid, char_list, bot_left_x, bot_left_y, step):
+    for i in range(len(char_list.init_list)):
+        char = char_list.get_creature(i + 1)
+        for row in range(7):
+            for column in range(13):
+                if char.name == "Leroy" and chars_grid[row][column] == 1:
+                    char.sprite.center_x = bot_left_x + column * step
+                    char.sprite.center_y = bot_left_y + row * step
+                elif char.name == "Lilith" and chars_grid[row][column] == 2:
+                    char.sprite.center_x = bot_left_x + column * step
+                    char.sprite.center_y = bot_left_y + row * step
 
 
 def get_cell_center(x, y, bot_left_x, bot_left_y, rect_width, step):
@@ -83,13 +88,13 @@ def draw_buttons(button_sprite_list, bot_left_y, screen_width):
     return button_sprite_list
 
 
-def draw_available_moves(char, path_grid, chars_grid, a_list, bot_left_x, bot_left_y, step):
+def draw_available_moves(p, char, path_grid, chars_grid, a_list, bot_left_x, bot_left_y, step):
     char_column = 0
     char_row = 0
     a_grid = [[False for x in range(13)] for y in range(7)]
     for i in range(13):
         for j in range(7):
-            if chars_grid[j][i] == 1:
+            if chars_grid[j][i] == p:
                 char_row = j
                 char_column = i
 
@@ -97,7 +102,8 @@ def draw_available_moves(char, path_grid, chars_grid, a_list, bot_left_x, bot_le
         for j in range(char_row - char.sp, char_row + char.sp):
             if 0 <= i <= 12 and 0 <= j <= 6:
                 if chars_grid[j][i] == 0 and path_grid[j][i] != 3:
-                    path_dict = find_path(path_grid, (char_column, char_row), (i, j))[1]
+                    path_dict = find_path(p, chars_grid, path_grid, (char_column, char_row), (i, j))[1]
+                    print(path_dict)
                     if path_dict[i, j] <= char.sp:
                         a_grid[j][i] = True
                         if a_grid[j][i]:
@@ -117,12 +123,12 @@ def get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, av
     return -1
 
 
-def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_grid):
-    c_row, c_column = find_char(chars_grid)
-    a = find_path(path_grid, (c_column, c_row), (column, row))[0]
+def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_grid, p):
+    c_row, c_column = find_char(p, chars_grid)
+    a = find_path(p, chars_grid, path_grid, (c_column, c_row), (column, row))[0]
     current = [column, row]
     chars_grid[c_row][c_column] = 0
-    chars_grid[row][column] = 1
+    chars_grid[row][column] = p
     while a[(current[0], current[1])] is not None:
         center = get_cell_center_by_r_c(current[1], current[0], bot_left_x, bot_left_y, step)
         target = arcade.Sprite("target.png", 0.5)
@@ -132,12 +138,22 @@ def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step,
         current = a[(current[0], current[1])]
 
 
-def find_char(chars_grid):
+def find_char(p, chars_grid):
     char_row = -1
     char_column = -1
     for i in range(13):
         for j in range(7):
-            if chars_grid[j][i] == 1:
+            if chars_grid[j][i] == p:
                 char_row = j
                 char_column = i
     return char_row, char_column
+
+
+def get_sprite_index(char, sprites):
+    i = 0
+    for a in sprites:
+        if char == a:
+            return i
+        else:
+            i += 1
+    return -1

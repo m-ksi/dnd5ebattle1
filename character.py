@@ -7,8 +7,8 @@ hp = 60
 att = (18, 10, 16, 8, 10, 16)  # str dex con int wis cha
 ac = 18
 sp = 6
-at = '1d8'
-attacks = ('attack', 'lay-on-hands', 'push', 'evade', 'dash', 'retribution')
+attacks = [['sword', 0, '1d8', 'slashing', 0, 'sounds/sword-hit.wav', 'miss_hit.wav']]
+# name + attribute (number) + amount + type + advantage + sound + miss sound
 bonus = ()
 spell_slots = (0, 0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -18,4 +18,4 @@ class Character(Creature):
         super().__init__(n, s, h, a, spe, sp_t, atr, aac, so)
 
 
-char = Character('Leroy', sprite, hp, ac, sp, 'walk', att, attacks, '')
+char = Character('Leroy', sprite, hp, ac, sp, 'walk', att, attacks, 'sounds/suffers.mp3')

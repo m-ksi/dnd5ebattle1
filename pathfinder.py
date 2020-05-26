@@ -119,28 +119,28 @@ def fill_weights(diagram, grid):
                 diagram.weights[(j, i + 1), (j, i)] = x
 
 
-def find_path(path_grid, pos, res):
+def find_path(p, chars_grid, path_grid, pos, res):
     grid_diagram = GridWithWeights(13, 7)
     walls = []
     fill_weights(grid_diagram, path_grid)
     for j in range(13):
         for i in range(7):
-            if path_grid[i][j] == 3:
+            if path_grid[i][j] == 3 or (chars_grid != 0 and chars_grid != p):
                 walls.append((j, i))
     grid_diagram.walls = walls
     path, costs = a_star(grid_diagram, pos, res)
     return path, costs, grid_diagram
 
 
-from grid import path_grid
+'''from grid import path_grid
 from implementation import draw_grid
 a, b, c = find_path(path_grid, (6, 2), (6, 6))
 print(c.weights)
 print(a)
 print(c)
-draw_grid(c, width=3, point_to=a, start=(6, 2), goal=(6, 6))
+draw_grid(c, width=3, point_to=a, start=(6, 2), goal=(6, 6))'''
 
-'''            if j - 1 >= 0:
+'''           if j - 1 >= 0:
                 if i - 1 >= 0:
                     diagram.weights[(j, i), (j - 1, i - 1)] = x
                 diagram.weights[(j, i), (j - 1, i)] = x
