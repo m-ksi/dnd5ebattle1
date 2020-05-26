@@ -98,12 +98,11 @@ def draw_available_moves(p, char, path_grid, chars_grid, a_list, bot_left_x, bot
                 char_row = j
                 char_column = i
 
-    for i in range(char_column - char.sp, char_column + char.sp):
-        for j in range(char_row - char.sp, char_row + char.sp):
+    for i in range(char_column - char.sp, char_column + char.sp + 1):
+        for j in range(char_row - char.sp, char_row + char.sp + 1):
             if 0 <= i <= 12 and 0 <= j <= 6:
                 if chars_grid[j][i] == 0 and path_grid[j][i] != 3:
-                    path_dict = find_path(p, chars_grid, path_grid, (char_column, char_row), (i, j))[1]
-                    print(path_dict)
+                    path_dict = find_path(p, chars_grid, path_grid, (char_column, char_row), (i, j), char.sp_type)[1]
                     if path_dict[i, j] <= char.sp:
                         a_grid[j][i] = True
                         if a_grid[j][i]:
@@ -123,19 +122,26 @@ def get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, av
     return -1
 
 
-def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_grid, p):
+def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_grid, p, char):
     c_row, c_column = find_char(p, chars_grid)
-    a = find_path(p, chars_grid, path_grid, (c_column, c_row), (column, row))[0]
+    path, tot_costs, grid = find_path(p, chars_grid, path_grid, (c_column, c_row), (column, row), char.sp_type)
+    weights = grid.weights
     current = [column, row]
+    nex = path[(current[0], current[1])]
     chars_grid[c_row][c_column] = 0
     chars_grid[row][column] = p
-    while a[(current[0], current[1])] is not None:
+    total_weight = 0
+    while path[(current[0], current[1])] is not None:
+        total_weight += weights[(current[0], current[1]), (nex[0], nex[1])]
+        # print(weights[(current[0], current[1]), (nex[0], nex[1])])
         center = get_cell_center_by_r_c(current[1], current[0], bot_left_x, bot_left_y, step)
         target = arcade.Sprite("target.png", 0.5)
         target.center_x = center[0]
         target.center_y = center[1]
         target_list.append(target)
-        current = a[(current[0], current[1])]
+        current = path[(current[0], current[1])]
+        nex = path[(nex[0], nex[1])]
+    char.sp -= total_weight
 
 
 def find_char(p, chars_grid):

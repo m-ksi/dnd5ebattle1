@@ -100,6 +100,7 @@ class MyGame(arcade.Window):
                 turn_mode[1] = 3
                 mainfuncs.draw_available_moves(self.current_index, self.current_char, path_grid, chars_grid, self.
                                                availability_list, bot_left_x, bot_left_y, step)
+                print(self.current_char.name, "'s sp left = ", self.current_char.sp, sep='')
             else:
                 turn_mode[1] = 0
         elif button == arcade.MOUSE_BUTTON_LEFT and self.current_char.sprite.change_x == 0 and self.current_char.sprite.\
@@ -120,11 +121,16 @@ class MyGame(arcade.Window):
                 turn_mode[1] = 0
         elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[1] == 3 and self.current_char.sp > 0:
             r = mainfuncs.get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, self.availability_list)
-            if r != -1:
+            if r != -1:  # move
                 mainfuncs.draw_path(self.target_list, r[0], r[1], path_grid, bot_left_x, bot_left_y, step, chars_grid,
-                                    self.current_index)
+                                    self.current_index, self.current_char)
                 self.empty_a_list()
                 turn_mode[1] = 0
+        elif button == arcade.MOUSE_BUTTON_LEFT and self.current_char.sprite.change_x == 0 and self.current_char.sprite.\
+                change_y == 0 and ((x - (SCREEN_WIDTH // 5 * 4)) ** 2 + (y - (
+                int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # next turn
+            self.empty_a_list()
+            self.next_turn()
 
     def on_update(self, delta_time: float):
         self.chars_sprite_list.update()

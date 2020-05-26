@@ -18,4 +18,4 @@ class Character(Creature):
         super().__init__(n, s, h, a, spe, sp_t, atr, aac, so)
 
 
-char = Character('Leroy', sprite, hp, ac, sp, 'walk', att, attacks, 'sounds/suffers.mp3')
+char = Character('Leroy', sprite, hp, ac, sp, 'walking', att, attacks, 'sounds/suffers.mp3')

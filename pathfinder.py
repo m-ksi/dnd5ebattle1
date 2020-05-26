@@ -94,11 +94,13 @@ def a_star(graph, start, goal):
     return came_from, cost_so_far
 
 
-def fill_weights(diagram, grid):
+def fill_weights(diagram, grid, sp_type):
     for j in range(13):
         for i in range(7):
-            if grid[i][j] != 3:
+            if grid[i][j] != 3 and sp_type == 'walking':
                 x = grid[i][j]
+            elif grid[i][j] != 3 and sp_type == 'flying':
+                x = 1
             else:
                 continue
             if j - 1 >= 0:
@@ -119,26 +121,27 @@ def fill_weights(diagram, grid):
                 diagram.weights[(j, i + 1), (j, i)] = x
 
 
-def find_path(p, chars_grid, path_grid, pos, res):
+def find_path(p, chars_grid, path_grid, pos, res, sp_type):
     grid_diagram = GridWithWeights(13, 7)
     walls = []
-    fill_weights(grid_diagram, path_grid)
     for j in range(13):
         for i in range(7):
-            if path_grid[i][j] == 3 or (chars_grid != 0 and chars_grid != p):
+            if path_grid[i][j] == 3 or (chars_grid[i][j] != 0 and chars_grid[i][j] != p):
                 walls.append((j, i))
     grid_diagram.walls = walls
+    fill_weights(grid_diagram, path_grid, sp_type)
     path, costs = a_star(grid_diagram, pos, res)
     return path, costs, grid_diagram
 
 
 '''from grid import path_grid
+from grid import chars_grid
+p = 2
 from implementation import draw_grid
-a, b, c = find_path(path_grid, (6, 2), (6, 6))
+a, b, c = find_path(p, chars_grid, path_grid, (5, 5), (0, 0), 'flying')
 print(c.weights)
 print(a)
-print(c)
-draw_grid(c, width=3, point_to=a, start=(6, 2), goal=(6, 6))'''
+draw_grid(c, width=3, point_to=a, start=(5, 5), goal=(0, 0))'''
 
 '''           if j - 1 >= 0:
                 if i - 1 >= 0:
