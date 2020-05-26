@@ -3,7 +3,7 @@ import settings
 from grid import map_grid
 from grid import path_grid
 from grid import chars_grid
-from character import char
+from character import paladin
 import mainfuncs
 import creature
 from bestiary import suc
@@ -32,9 +32,9 @@ class MyGame(arcade.Window):
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
 
-        self.char = char
+        self.char = paladin
         self.suc = suc
-        self.Char_list = creature.CreatureList([char, suc])
+        self.Char_list = creature.CreatureList([paladin, suc])
 
         self.current_char = self.Char_list.get_creature(1)
         print(self.current_char.name, ' turn!')
@@ -49,9 +49,6 @@ class MyGame(arcade.Window):
         self.availability_list = None
 
     def setup(self):
-        '''self.char_sprite = arcade.Sprite(self.char.sprite, 8 / 3)
-        self.chars_sprite_list = arcade.SpriteList()
-        self.chars_sprite_list.append(self.char_sprite)'''
 
         self.availability_list = arcade.SpriteList()  # cells available to choose
         self.button_sprite_list = arcade.SpriteList()  # all buttons

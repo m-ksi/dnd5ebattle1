@@ -4,7 +4,7 @@ import random
 
 class Creature:
 
-    def __init__(self, name, sprite, max_hp, ac, max_sp, sp_type, att, attacks, sound):
+    def __init__(self, name, sprite, max_hp, ac, max_sp, sp_type, att, prof, attacks, sound):
         self.name = name
         self.sprite = arcade.Sprite(sprite, 8/3)
         self.max_hp = max_hp  # max health
@@ -13,12 +13,13 @@ class Creature:
         self.max_sp = max_sp  # full speed
         self.sp = self.max_sp  # current speed
         self.sp_type = sp_type  # type of speed (on earth, air, etc)
+        self.proficiency = prof
         self.att = att  # attributes (str dex con int wis cha)
         self.attacks = attacks  # name + attribute (number) + amount + type + advantage + sound + miss sound
         self.sound = sound  # suffering damage
 
     def attack(self, attack, Enemy):
-        if Enemy.ac < random.randrange(1, 20) + (self.att(attack(1)) - 10) // 2:
+        if Enemy.ac < random.randrange(1, 20) + (self.att(attack(1)) - 10) // 2 + self.proficiency:
             Enemy.receive_damage(attack, self)
             arcade.play_sound(self.attacks[0][5])
             arcade.play_sound(self.sound)

@@ -1,0 +1,3 @@
+"""
+all active effects here
+"""

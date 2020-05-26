@@ -13,9 +13,9 @@ sound = 'sounds/beinghit.mp3'
 
 
 class Succubus(Creature):
-    def __init__(self, n, s, h, a, spe, sp_t, atr, aac, so):
-        super().__init__(n, s, h, a, spe, sp_t, atr, aac, so)
+    def __init__(self, n, s, h, a, spe, sp_t, atr, prof, aac, so):
+        super().__init__(n, s, h, a, spe, sp_t, atr, prof, aac, so)
 
 
-suc = Succubus('Lilith', sprite, hp, ac, sp, sp_type, att, attacks, sound)
+suc = Succubus('Lilith', sprite, hp, ac, sp, sp_type, att, 3, attacks, sound)
 
