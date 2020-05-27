@@ -3,7 +3,7 @@ import settings
 from grid import map_grid
 from grid import path_grid
 from grid import chars_grid
-from character import paladin
+from character import paladin, rogue
 import mainfuncs
 import creature
 from bestiary import suc
@@ -11,15 +11,15 @@ from bestiary import suc
 SCREEN_WIDTH = settings.SCREEN_WIDTH
 SCREEN_HEIGHT = SCREEN_WIDTH // 16 * 9
 rect_width = SCREEN_WIDTH // 16
-FIELD_WIDTH = 13.7 * rect_width  # SCREEN_WIDTH * 13 // 16
-FIELD_HEIGHT = 7.4 * rect_width  # SCREEN_HEIGHT * 7 // 9
+FIELD_WIDTH = 13.7 * rect_width
+FIELD_HEIGHT = 7.4 * rect_width
 FIELD_CENTER_X = 7.15 * SCREEN_WIDTH // 16
 FIELD_CENTER_Y = 5 * SCREEN_HEIGHT // 9
 step = int(rect_width + (rect_width / 20))
 bot_left_x = FIELD_CENTER_X - 6 * step
 bot_left_y = FIELD_CENTER_Y - 3 * step
 
-turn_mode = [1, 0]  # 1 - best init turn; 1 - choose attack, 2 - choose bonus, 3 - choose movement, 4 - choose spell
+turn_mode = settings.turn_mode
 
 
 class MyGame(arcade.Window):
@@ -34,10 +34,14 @@ class MyGame(arcade.Window):
 
         self.char = paladin
         self.suc = suc
-        self.Char_list = creature.CreatureList([paladin, suc])
+        self.rogue = rogue
+        self.Char_list = creature.CreatureList([paladin, suc, rogue])
+        print('Creature_list:', self.Char_list.Creature_list)
+        print('init_list:', self.Char_list.init_list)
+        print('order', self.Char_list.order)
 
         self.current_char = self.Char_list.get_creature(1)
-        print(self.current_char.name, ' turn!')
+        print(self.current_char.name, 'turn!')
         self.current_index = mainfuncs.get_sprite_index(self.current_char.sprite, self.Char_list.sprites) + 1
 
         self.grid_sprite_list = None
@@ -68,10 +72,11 @@ class MyGame(arcade.Window):
         if turn_mode[0] > len(self.Char_list.Creature_list):
             turn_mode[0] = 1
         t = turn_mode[0]
+        print(t)
         self.Char_list.next_turn()
         self.current_char = self.Char_list.get_creature(t)
         self.current_index = mainfuncs.get_sprite_index(self.current_char.sprite, self.Char_list.sprites) + 1
-        print(self.current_char.name, ' turn!')
+        print(self.current_char.name, 'turn!')
 
     def on_draw(self):
         """
@@ -106,12 +111,17 @@ class MyGame(arcade.Window):
             self.empty_a_list()
             if turn_mode[1] != 1:
                 turn_mode[1] = 1
+                print('Creature_list:', self.Char_list.Creature_list)
+                print('order', self.Char_list.order)
+                print('turn_mode[0]:', turn_mode[0])
+                print('current_char:', self.current_char)
             else:
                 turn_mode[1] = 0
         elif button == arcade.MOUSE_BUTTON_LEFT and self.current_char.sprite.change_x == 0 and self.current_char.sprite.\
                 change_y == 0 and ((x - (SCREEN_WIDTH // 5 * 2)) ** 2 + (y - (
                 int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # bonus mode
             self.empty_a_list()
+            self.Char_list.get_creature(2).hp = 0
             if turn_mode[1] != 2:
                 turn_mode[1] = 2
             else:
@@ -137,10 +147,37 @@ class MyGame(arcade.Window):
         self.availability_list.update()
 
         mainfuncs.follow_target(self.target_list, self.current_char.sprite)
+        # self.Char_list.if_dies()
+        self.check_dead()
+
+    def check_dead(self):
+        for c in self.Char_list.Creature_list:
+            if c.hp <= 0:
+                n = self.Char_list.Creature_list.index(c)
+                [row, column] = mainfuncs.find_char(n + 1, chars_grid)
+                print(row, column)
+                order = self.Char_list.order[n]
+                self.kill(c, row, column, order)
+
+    def kill(self, char, row, column, order):
+        self.Char_list.Creature_list.remove(char)
+        print('Creature_list in func:', self.Char_list.Creature_list)
+        self.Char_list.sprites.remove(char.sprite)
+        chars_grid[row][column] = 0
+        self.fix_init(order)
+
+    def fix_init(self, order):
+        self.Char_list.order.remove(order)
+        for i in range(len(self.Char_list.order)):
+            if self.Char_list.order[i] > order:
+                self.Char_list.order[i] -= 1
+        print('order in func:', self.Char_list.order)
+        if turn_mode[0] >= order:
+            turn_mode[0] -= 1
 
 
 def main():
-    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, 'Test')
+    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, 'DnD 5e Battle')
     window.setup()
     arcade.run()
 

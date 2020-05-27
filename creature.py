@@ -1,5 +1,8 @@
 import arcade
 import random
+from effects import *
+from grid import chars_grid
+import mainfuncs
 
 
 class Creature:
@@ -12,24 +15,27 @@ class Creature:
         self.ac = ac  # armor class
         self.max_sp = max_sp  # full speed
         self.sp = self.max_sp  # current speed
-        self.sp_type = sp_type  # type of speed (on earth, air, etc)
+        self.sp_type = sp_type  # type of speed (flying, walking, etc)
         self.proficiency = prof
         self.att = att  # attributes (str dex con int wis cha)
-        self.attacks = attacks  # name + attribute (number) + amount + type + advantage + sound + miss sound
+        self.attacks = attacks
         self.sound = sound  # suffering damage
+        self.effects = EffectList()  # active effects
+        self.adv = 0  # 0 for normal, 1 for adv to hit this char, 0 for evasion
 
-    def attack(self, attack, Enemy):
-        if Enemy.ac < random.randrange(1, 20) + (self.att(attack(1)) - 10) // 2 + self.proficiency:
-            Enemy.receive_damage(attack, self)
-            arcade.play_sound(self.attacks[0][5])
-            arcade.play_sound(self.sound)
+    def attack(self, attr, damage, Enemy, d_type):
+        if Enemy.ac < random.randrange(1, 20) + (self.att(attr) - 10) // 2 + self.proficiency:
+            Enemy.receive_damage(damage, d_type)
+            # arcade.play_sound(self.attacks[0][5])
+            # arcade.play_sound(Enemy.sound)
         else:
-            arcade.play_sound(self.attacks[0][6])
+            pass
+            # arcade.play_sound(self.attacks[0][6])
 
-    def receive_damage(self, attack, Enemy):
-        damage = 0
-        for i in range(int(attack(2).split('d')[0])):
-            damage += random.randrange(1, int(attack(2).split('d')[1]))
+    def receive_damage(self, damage, d_type):
+        t_damage = 0
+        for i in (range(int(damage.split('d')[0]) - 1)):
+            damage += random.randrange(1, int(damage.split('d')[1]))
         self.hp -= damage
         if self.hp <= 0:
             self.die()
@@ -38,11 +44,13 @@ class Creature:
         pass
 
     def roll_init(self):
-        i = random.randrange(1, 20) + ((self.att[1] - 10) // 2)
+        i = random.randrange(1, 20) + ((self.att['dex'] - 10) // 2)
         return i
 
     def next_turn(self):
         self.sp = self.max_sp
+        self.adv = 0
+        self.effects.next_turn()
 
 
 class CreatureList:
@@ -71,7 +79,7 @@ class CreatureList:
             sprite = c.sprite
             self.sprites.append(sprite)
 
-    def get_creature(self, n):
+    def get_creature(self, n):  # by index in main list by init order
         for i in range(len(self.order)):
             if n == self.order[i]:
                 return self.Creature_list[i]
@@ -81,4 +89,28 @@ class CreatureList:
         for c in self.Creature_list:
             c.next_turn()
 
+    def if_dies(self):
+        for c in self.Creature_list:
+            if c.hp <= 0:
+                n = self.Creature_list.index(c)
+                [row, column] = mainfuncs.find_char(n + 1, chars_grid)
+                print(row, column)
+                order = self.order[n]
+                self.kill(c, row, column, order)
+                # chars_grid[row][column] = 0
+                # self.Creature_list.remove(c)
+
+    def kill(self, char, row, column, order):
+        self.Creature_list.remove(char)
+        print('Creature_list in class:', self.Creature_list)
+        self.sprites.remove(char.sprite)
+        chars_grid[row][column] = 0
+        self.fix_init(order)
+
+    def fix_init(self, order):
+        self.order.remove(order)
+        for i in range(len(self.order)):
+            if self.order[i] > order:
+                self.order[i] -= 1
+        print('order in class:', self.order)
 

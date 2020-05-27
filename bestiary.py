@@ -5,7 +5,7 @@ hp = 40
 ac = 15
 sp = 12
 sp_type = 'flying'
-att = (10, 20, 15, 8, 12, 20)
+att = {'str': 10, 'dex': 20, 'con': 15, 'int': 8, 'wis': 12, 'cha': 20}
 attacks = [['claws', 1, '1d8', 'slashing', 0, 'sounds/hit_knife.wav', 'sounds/miss_hit.wav'],
            ['fangs', 1, '1d6', 'piercing', 0, '', '']]
 # name + attribute (number) + amount + type + advantage + sound + miss sound

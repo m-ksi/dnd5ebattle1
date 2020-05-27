@@ -49,6 +49,9 @@ def draw_chars(chars_grid, char_list, bot_left_x, bot_left_y, step):
                 elif char.name == "Lilith" and chars_grid[row][column] == 2:
                     char.sprite.center_x = bot_left_x + column * step
                     char.sprite.center_y = bot_left_y + row * step
+                elif char.name == "Lenny" and chars_grid[row][column] == 3:
+                    char.sprite.center_x = bot_left_x + column * step
+                    char.sprite.center_y = bot_left_y + row * step
 
 
 def get_cell_center(x, y, bot_left_x, bot_left_y, rect_width, step):
@@ -68,24 +71,45 @@ def get_cell_r_c(x, y, bot_left_x, bot_left_y, rect_width, step):
 
 
 def draw_buttons(button_sprite_list, bot_left_y, screen_width):
-    action_button_sprite = arcade.Sprite('actionbtn.png', 8 / 3)
-    bonus_button_sprite = arcade.Sprite('bonusbtn.png', 8 / 3)
+    # action_button_sprite = arcade.Sprite('actionbtn.png', 8 / 3)
+    # bonus_button_sprite = arcade.Sprite('bonusbtn.png', 8 / 3)
     move_button_sprite = arcade.Sprite('movebtn.png', 8 / 3)
     turn_button_sprite = arcade.Sprite('next_turn.png', 8 / 3)
     center_y = int(bot_left_y // 2) * 4 // 5
-    action_button_sprite.center_y = center_y
-    bonus_button_sprite.center_y = center_y
+    # action_button_sprite.center_y = center_y
+    # bonus_button_sprite.center_y = center_y
     move_button_sprite.center_y = center_y
     turn_button_sprite.center_y = center_y
-    action_button_sprite.center_x = screen_width // 5
-    bonus_button_sprite.center_x = screen_width // 5 * 2
+    # action_button_sprite.center_x = screen_width // 5
+    # bonus_button_sprite.center_x = screen_width // 5 * 2
     move_button_sprite.center_x = screen_width // 5 * 3
     turn_button_sprite.center_x = screen_width // 5 * 4
-    button_sprite_list.append(action_button_sprite)
-    button_sprite_list.append(bonus_button_sprite)
+    # button_sprite_list.append(action_button_sprite)
+    # button_sprite_list.append(bonus_button_sprite)
     button_sprite_list.append(move_button_sprite)
     button_sprite_list.append(turn_button_sprite)
-    return button_sprite_list
+
+    action_selector_l = arcade.Sprite('a_button_left.jpg', 8 / 3)
+    action_selector_c = arcade.Sprite('a_selector.jpg', 8 / 3)
+    action_selector_r = arcade.Sprite('a_button.jpg', 8 / 3)
+    action_selector_l.center_y = action_selector_c.center_y = action_selector_r.center_y = center_y
+    action_selector_c.center_x = screen_width // 5
+    action_selector_r.center_x = screen_width // 5 + 70
+    action_selector_l.center_x = screen_width // 5 - 70
+    button_sprite_list.append(action_selector_c)
+    button_sprite_list.append(action_selector_l)
+    button_sprite_list.append(action_selector_r)
+
+    bonus_selector_l = arcade.Sprite('a_button_left.jpg', 8 / 3)
+    bonus_selector_c = arcade.Sprite('a_selector.jpg', 8 / 3)
+    bonus_selector_r = arcade.Sprite('a_button.jpg', 8 / 3)
+    bonus_selector_l.center_y = bonus_selector_c.center_y = bonus_selector_r.center_y = center_y
+    bonus_selector_c.center_x = screen_width // 5 * 2
+    bonus_selector_r.center_x = screen_width // 5 * 2 + 70
+    bonus_selector_l.center_x = screen_width // 5 * 2 - 70
+    button_sprite_list.append(bonus_selector_c)
+    button_sprite_list.append(bonus_selector_l)
+    button_sprite_list.append(bonus_selector_r)
 
 
 def draw_available_moves(p, char, path_grid, chars_grid, a_list, bot_left_x, bot_left_y, step):
@@ -163,3 +187,5 @@ def get_sprite_index(char, sprites):
         else:
             i += 1
     return -1
+
+
