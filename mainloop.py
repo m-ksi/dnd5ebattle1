@@ -2,11 +2,11 @@ import arcade
 import settings
 from grid import map_grid
 from grid import path_grid
-from grid import chars_grid
 from character import paladin, rogue
 import mainfuncs
 import creature
 from bestiary import suc
+from actions import action_handler
 
 SCREEN_WIDTH = settings.SCREEN_WIDTH
 SCREEN_HEIGHT = SCREEN_WIDTH // 16 * 9
@@ -47,6 +47,9 @@ class MyGame(arcade.Window):
         self.grid_sprite_list = None
         self.button_sprite_list = None
 
+        self.action_button_sprite = None
+        self.chosen_action = 0
+
         self.chars_sprite_list = self.Char_list.sprites
 
         self.target_list = None
@@ -58,8 +61,11 @@ class MyGame(arcade.Window):
         self.button_sprite_list = arcade.SpriteList()  # all buttons
         self.target_list = arcade.SpriteList()  # targets to follow
         self.grid_sprite_list = arcade.SpriteList()  # map
+
+        self.action_button_sprite = mainfuncs.load_actions(self.current_char, self.action_button_sprite, self.chosen_action, SCREEN_WIDTH, bot_left_y)
+
         mainfuncs.draw_grid_sprites(self.grid_sprite_list, map_grid, bot_left_x, bot_left_y, step)
-        mainfuncs.draw_chars(chars_grid, self.Char_list, bot_left_x, bot_left_y, step)
+        mainfuncs.draw_chars(self.Char_list, bot_left_x, bot_left_y, step)
         mainfuncs.draw_buttons(self.button_sprite_list, bot_left_y, SCREEN_WIDTH)
 
     def empty_a_list(self):
@@ -72,10 +78,10 @@ class MyGame(arcade.Window):
         if turn_mode[0] > len(self.Char_list.Creature_list):
             turn_mode[0] = 1
         t = turn_mode[0]
-        print(t)
-        self.Char_list.next_turn()
+        self.Char_list.next_turn(t - 1)
         self.current_char = self.Char_list.get_creature(t)
         self.current_index = mainfuncs.get_sprite_index(self.current_char.sprite, self.Char_list.sprites) + 1
+        self.action_button_sprite = mainfuncs.load_actions(self.current_char, self.action_button_sprite, self.chosen_action, SCREEN_WIDTH, bot_left_y)
         print(self.current_char.name, 'turn!')
 
     def on_draw(self):
@@ -85,6 +91,7 @@ class MyGame(arcade.Window):
         arcade.start_render()
         arcade.draw_rectangle_filled(FIELD_CENTER_X, FIELD_CENTER_Y, FIELD_WIDTH, FIELD_HEIGHT, arcade.color.BLACK)
         self.button_sprite_list.draw()
+        self.action_button_sprite.draw()
         self.grid_sprite_list.draw()
         self.target_list.draw()
         self.chars_sprite_list.draw()
@@ -100,7 +107,7 @@ class MyGame(arcade.Window):
             self.empty_a_list()
             if turn_mode[1] != 3:
                 turn_mode[1] = 3
-                mainfuncs.draw_available_moves(self.current_index, self.current_char, path_grid, chars_grid, self.
+                mainfuncs.draw_available_moves(self.Char_list, self.current_char, path_grid, self.
                                                availability_list, bot_left_x, bot_left_y, step)
                 print(self.current_char.name, "'s sp left = ", self.current_char.sp, sep='')
             else:
@@ -111,17 +118,25 @@ class MyGame(arcade.Window):
             self.empty_a_list()
             if turn_mode[1] != 1:
                 turn_mode[1] = 1
-                print('Creature_list:', self.Char_list.Creature_list)
-                print('order', self.Char_list.order)
-                print('turn_mode[0]:', turn_mode[0])
-                print('current_char:', self.current_char)
+                if not mainfuncs.draw_available_actions(self.Char_list, self.current_char, self.chosen_action, self.
+                                                 availability_list, bot_left_x, bot_left_y, step):
+                    turn_mode[1] = 0
             else:
                 turn_mode[1] = 0
+        elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[1] == 1:  # doing action
+            r = mainfuncs.get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, self.availability_list)
+            if r != -1:
+                tg_char = mainfuncs.find_char(self.Char_list.Creature_list, r[0], r[1])
+                action_handler(self.current_char.actions.action_list[self.chosen_action], self.current_char, tg_char)
+                self.check_dead()
+                turn_mode[1] = 0
+                self.empty_a_list()
         elif button == arcade.MOUSE_BUTTON_LEFT and self.current_char.sprite.change_x == 0 and self.current_char.sprite.\
                 change_y == 0 and ((x - (SCREEN_WIDTH // 5 * 2)) ** 2 + (y - (
                 int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # bonus mode
             self.empty_a_list()
-            self.Char_list.get_creature(2).hp = 0
+            """self.Char_list.get_creature(2).hp = 0
+            self.check_dead()"""
             if turn_mode[1] != 2:
                 turn_mode[1] = 2
             else:
@@ -129,8 +144,8 @@ class MyGame(arcade.Window):
         elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[1] == 3 and self.current_char.sp > 0:
             r = mainfuncs.get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, self.availability_list)
             if r != -1:  # move
-                mainfuncs.draw_path(self.target_list, r[0], r[1], path_grid, bot_left_x, bot_left_y, step, chars_grid,
-                                    self.current_index, self.current_char)
+                mainfuncs.draw_path(self.target_list, r[0], r[1], path_grid, bot_left_x, bot_left_y, step,
+                                    self.Char_list, self.current_char)
                 self.empty_a_list()
                 turn_mode[1] = 0
         elif button == arcade.MOUSE_BUTTON_LEFT and self.current_char.sprite.change_x == 0 and self.current_char.sprite.\
@@ -138,6 +153,14 @@ class MyGame(arcade.Window):
                 int(bot_left_y // 2) * 4 // 5)) ** 2 <= (rect_width // 2) ** 2):  # next turn
             self.empty_a_list()
             self.next_turn()
+        elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[1] == 0 and \
+                SCREEN_WIDTH // 5 + 70 - 13 <= x <= SCREEN_WIDTH // 5 + 70 + 13 and \
+                int(bot_left_y // 2) * 4 // 5 - 40 <= y <= int(bot_left_y // 2) * 4 // 5 + 40:
+            self.action_button_sprite, self.chosen_action = mainfuncs.next_action(self.current_char, self.action_button_sprite, self.chosen_action, SCREEN_WIDTH, bot_left_y)
+        elif button == arcade.MOUSE_BUTTON_LEFT and turn_mode[1] == 0 and\
+                SCREEN_WIDTH // 5 - 70 - 13 <= x <= SCREEN_WIDTH // 5 - 70 + 13 and \
+                int(bot_left_y // 2) * 4 // 5 - 40 <= y <= int(bot_left_y // 2) * 4 // 5 + 40:
+            self.action_button_sprite, self.chosen_action = mainfuncs.previous_action(self.current_char, self.action_button_sprite, self.chosen_action, SCREEN_WIDTH, bot_left_y)
 
     def on_update(self, delta_time: float):
         self.chars_sprite_list.update()
@@ -145,35 +168,41 @@ class MyGame(arcade.Window):
         self.target_list.update()
         self.button_sprite_list.update()
         self.availability_list.update()
+        self.action_button_sprite.update()
 
         mainfuncs.follow_target(self.target_list, self.current_char.sprite)
-        # self.Char_list.if_dies()
-        self.check_dead()
 
     def check_dead(self):
         for c in self.Char_list.Creature_list:
             if c.hp <= 0:
                 n = self.Char_list.Creature_list.index(c)
-                [row, column] = mainfuncs.find_char(n + 1, chars_grid)
-                print(row, column)
                 order = self.Char_list.order[n]
-                self.kill(c, row, column, order)
+                self.kill(c, order)
 
-    def kill(self, char, row, column, order):
+    def kill(self, char, order):
         self.Char_list.Creature_list.remove(char)
         print('Creature_list in func:', self.Char_list.Creature_list)
         self.Char_list.sprites.remove(char.sprite)
-        chars_grid[row][column] = 0
+        char.position = [None, None]
+        self.Char_list.update_positions()
         self.fix_init(order)
 
     def fix_init(self, order):
+        n = self.Char_list.order.index(order)
         self.Char_list.order.remove(order)
         for i in range(len(self.Char_list.order)):
             if self.Char_list.order[i] > order:
                 self.Char_list.order[i] -= 1
-        print('order in func:', self.Char_list.order)
+        # print('order in func:', self.Char_list.order)
+        self.Char_list.init_list.pop(n)
         if turn_mode[0] >= order:
             turn_mode[0] -= 1
+        if turn_mode[0] + 1 == order:
+            t = turn_mode[0]
+            self.Char_list.next_turn(t - 1)
+            self.current_char = self.Char_list.get_creature(t)
+            self.current_index = mainfuncs.get_sprite_index(self.current_char.sprite, self.Char_list.sprites) + 1
+            print(self.current_char.name, 'turn!')
 
 
 def main():

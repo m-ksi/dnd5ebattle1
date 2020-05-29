@@ -1,6 +1,7 @@
 import math
 import arcade
 from pathfinder import find_path
+# from actions import
 
 
 def follow_target(t_list, char_sprite):
@@ -38,7 +39,8 @@ def draw_grid_sprites(grid_sprite_list, map_grid, bot_left_x, bot_left_y, step):
             grid_sprite_list.append(rect_sprite)
 
 
-def draw_chars(chars_grid, char_list, bot_left_x, bot_left_y, step):
+def draw_chars(char_list, bot_left_x, bot_left_y, step):
+    """ old ver with chars_grid
     for i in range(len(char_list.init_list)):
         char = char_list.get_creature(i + 1)
         for row in range(7):
@@ -52,6 +54,11 @@ def draw_chars(chars_grid, char_list, bot_left_x, bot_left_y, step):
                 elif char.name == "Lenny" and chars_grid[row][column] == 3:
                     char.sprite.center_x = bot_left_x + column * step
                     char.sprite.center_y = bot_left_y + row * step
+    """
+    for char in char_list.Creature_list:
+        if char.position[0] is not None:
+            char.sprite.center_x = bot_left_x + char.position[1] * step
+            char.sprite.center_y = bot_left_y + char.position[0] * step
 
 
 def get_cell_center(x, y, bot_left_x, bot_left_y, rect_width, step):
@@ -76,16 +83,10 @@ def draw_buttons(button_sprite_list, bot_left_y, screen_width):
     move_button_sprite = arcade.Sprite('movebtn.png', 8 / 3)
     turn_button_sprite = arcade.Sprite('next_turn.png', 8 / 3)
     center_y = int(bot_left_y // 2) * 4 // 5
-    # action_button_sprite.center_y = center_y
-    # bonus_button_sprite.center_y = center_y
     move_button_sprite.center_y = center_y
     turn_button_sprite.center_y = center_y
-    # action_button_sprite.center_x = screen_width // 5
-    # bonus_button_sprite.center_x = screen_width // 5 * 2
     move_button_sprite.center_x = screen_width // 5 * 3
     turn_button_sprite.center_x = screen_width // 5 * 4
-    # button_sprite_list.append(action_button_sprite)
-    # button_sprite_list.append(bonus_button_sprite)
     button_sprite_list.append(move_button_sprite)
     button_sprite_list.append(turn_button_sprite)
 
@@ -112,21 +113,21 @@ def draw_buttons(button_sprite_list, bot_left_y, screen_width):
     button_sprite_list.append(bonus_selector_r)
 
 
-def draw_available_moves(p, char, path_grid, chars_grid, a_list, bot_left_x, bot_left_y, step):
-    char_column = 0
-    char_row = 0
+def draw_available_moves(chars_list, char, path_grid, a_list, bot_left_x, bot_left_y, step):
     a_grid = [[False for x in range(13)] for y in range(7)]
-    for i in range(13):
+    char_row = char.position[0]
+    char_column = char.position[1]
+    """for i in range(13):
         for j in range(7):
             if chars_grid[j][i] == p:
                 char_row = j
-                char_column = i
+                char_column = i"""
 
     for i in range(char_column - char.sp, char_column + char.sp + 1):
         for j in range(char_row - char.sp, char_row + char.sp + 1):
             if 0 <= i <= 12 and 0 <= j <= 6:
-                if chars_grid[j][i] == 0 and path_grid[j][i] != 3:
-                    path_dict = find_path(p, chars_grid, path_grid, (char_column, char_row), (i, j), char.sp_type)[1]
+                if path_grid[j][i] != 3 and [j, i] not in chars_list.positions:
+                    path_dict = find_path(chars_list, path_grid, (char_column, char_row), (i, j), char.sp_type)[1]
                     if path_dict[i, j] <= char.sp:
                         a_grid[j][i] = True
                         if a_grid[j][i]:
@@ -146,14 +147,14 @@ def get_clicked_available_ter(x, y, bot_left_x, bot_left_y, rect_width, step, av
     return -1
 
 
-def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_grid, p, char):
-    c_row, c_column = find_char(p, chars_grid)
-    path, tot_costs, grid = find_path(p, chars_grid, path_grid, (c_column, c_row), (column, row), char.sp_type)
+def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step, chars_list, char):
+    c_row, c_column = char.position
+    path, tot_costs, grid = find_path(chars_list, path_grid, (c_column, c_row), (column, row), char.sp_type)
     weights = grid.weights
     current = [column, row]
     nex = path[(current[0], current[1])]
-    chars_grid[c_row][c_column] = 0
-    chars_grid[row][column] = p
+    char.position = [row, column]
+    chars_list.update_positions()
     total_weight = 0
     while path[(current[0], current[1])] is not None:
         total_weight += weights[(current[0], current[1]), (nex[0], nex[1])]
@@ -168,6 +169,7 @@ def draw_path(target_list, row, column, path_grid, bot_left_x, bot_left_y, step,
     char.sp -= total_weight
 
 
+""" old stuff
 def find_char(p, chars_grid):
     char_row = -1
     char_column = -1
@@ -176,7 +178,13 @@ def find_char(p, chars_grid):
             if chars_grid[j][i] == p:
                 char_row = j
                 char_column = i
-    return char_row, char_column
+    return char_row, char_column"""
+
+
+def find_char(chars_list, row, column):
+    for c in chars_list:
+        if c.position == [row, column]:
+            return c
 
 
 def get_sprite_index(char, sprites):
@@ -189,3 +197,52 @@ def get_sprite_index(char, sprites):
     return -1
 
 
+def load_actions(char, button_sprite, chosen_action, screen_width, bot_left_y):
+    chosen_action = 0
+    button_sprite = arcade.Sprite(char.actions.action_list[0].icon, 8/3)
+    button_sprite.center_x = screen_width // 5
+    button_sprite.center_y = int(bot_left_y // 2) * 4 // 5
+    return button_sprite
+
+
+def next_action(char, button_sprite, chosen_action, screen_width, bot_left_y):
+    chosen_action += 1
+    if chosen_action >= len(char.actions.action_list):
+        chosen_action = 0
+    button_sprite = arcade.Sprite(char.actions.action_list[chosen_action].icon, 8/3)
+    button_sprite.center_x = screen_width // 5
+    button_sprite.center_y = int(bot_left_y // 2) * 4 // 5
+    return button_sprite, chosen_action
+
+
+def previous_action(char, button_sprite, chosen_action, screen_width, bot_left_y):
+    chosen_action -= 1
+    if chosen_action < 0:
+        chosen_action = len(char.actions.action_list) - 1
+    button_sprite = arcade.Sprite(char.actions.action_list[chosen_action].icon, 8/3)
+    button_sprite.center_x = screen_width // 5
+    button_sprite.center_y = int(bot_left_y // 2) * 4 // 5
+    return button_sprite, chosen_action
+
+
+def draw_available_actions(chars_list, char, action_i, a_list, bot_left_x, bot_left_y, step):
+    available_squares = []
+    action = char.actions.action_list[action_i]
+    reach = action.reach
+    ren = False
+    if reach == 0:
+        available_squares.append(char.position)
+    else:
+        for row in range((char.position[0] - reach), (char.position[0] + reach + 1)):
+            for column in range((char.position[1] - reach), (char.position[1] + reach + 1)):
+                if [row, column] in chars_list.positions:
+                    available_squares.append([row, column])
+        odd = char.position
+        available_squares.remove(odd)
+        for square in available_squares:
+            a_sprite = arcade.Sprite('available_ter.png', 8 / 3)
+            a_sprite.center_x = bot_left_x + square[1] * step
+            a_sprite.center_y = bot_left_y + square[0] * step
+            a_list.append(a_sprite)
+            ren = True
+    return ren

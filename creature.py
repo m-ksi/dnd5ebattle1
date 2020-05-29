@@ -1,16 +1,18 @@
 import arcade
 import random
 from effects import *
-from grid import chars_grid
 import mainfuncs
 
 
 class Creature:
 
-    def __init__(self, name, sprite, max_hp, ac, max_sp, sp_type, att, prof, attacks, sound):
+    def __init__(self, name, sprite, position, max_hp, ac, max_sp, sp_type, att, prof, attacks, sound):
         self.name = name
         self.sprite = arcade.Sprite(sprite, 8/3)
-        self.max_hp = max_hp  # max health
+        self.position = []
+        self.position.append(position[0])
+        self.position.append(position[1])
+        self.max_hp = int(max_hp)  # max health
         self.hp = self.max_hp  # current health
         self.ac = ac  # armor class
         self.max_sp = max_sp  # full speed
@@ -18,26 +20,35 @@ class Creature:
         self.sp_type = sp_type  # type of speed (flying, walking, etc)
         self.proficiency = prof
         self.att = att  # attributes (str dex con int wis cha)
-        self.attacks = attacks
-        self.sound = sound  # suffering damage
+        self.actions = attacks
+        # self.sound = sound  # dict of sounds
+        self.sound = {'hurt': arcade.load_sound(sound['hurt'])}
         self.effects = EffectList()  # active effects
         self.adv = 0  # 0 for normal, 1 for adv to hit this char, 0 for evasion
+        self.action = 1
+        self.num_of_attacks = 3
 
-    def attack(self, attr, damage, Enemy, d_type):
-        if Enemy.ac < random.randrange(1, 20) + (self.att(attr) - 10) // 2 + self.proficiency:
-            Enemy.receive_damage(damage, d_type)
-            # arcade.play_sound(self.attacks[0][5])
-            # arcade.play_sound(Enemy.sound)
+    def attack(self, attr, damage, Enemy, d_type, s1, s2):
+        if Enemy.ac < random.randrange(1, 20) + (self.att[attr] - 10) // 2 + self.proficiency:
+            print(self.name, 'hits!')
+            Enemy.receive_damage(self, damage, attr, d_type)
+            # arcade.play_sound(self.actions.sound['hit'])
+            Enemy.sound['hurt'].play(volume=0.2)
+            s1.play(volume=0.2)
         else:
-            pass
-            # arcade.play_sound(self.attacks[0][6])
+            print(self.name, 'misses!')
+            s2.play(volume=0.2)
+            # arcade.play_sound(self.actions.sound['miss'])
 
-    def receive_damage(self, damage, d_type):
+    def receive_damage(self, Enemy, damage, attr, d_type):
         t_damage = 0
-        for i in (range(int(damage.split('d')[0]) - 1)):
-            damage += random.randrange(1, int(damage.split('d')[1]))
-        self.hp -= damage
+        for i in (range(int(damage.split('d')[0]))):
+            t_damage += random.randrange(1, int(damage.split('d')[1]))
+        t_damage += (Enemy.att[attr] - 10) // 2
+        print(self.name, 'hurt in', t_damage, 'damage')
+        self.hp -= t_damage
         if self.hp <= 0:
+            print(self.name, 'dies!')
             self.die()
 
     def die(self):
@@ -50,6 +61,7 @@ class Creature:
     def next_turn(self):
         self.sp = self.max_sp
         self.adv = 0
+        self.action = 1
         self.effects.next_turn()
 
 
@@ -68,6 +80,9 @@ class CreatureList:
 
         self.assign_sprites()
 
+        self.positions = []
+        self.update_positions()
+
     def roll_init(self):
         for i in range(len(self.Creature_list)):
             self.init_list.append(self.Creature_list[i].roll_init())
@@ -85,32 +100,11 @@ class CreatureList:
                 return self.Creature_list[i]
         return -1
 
-    def next_turn(self):
-        for c in self.Creature_list:
-            c.next_turn()
+    def next_turn(self, t):
+        self.Creature_list[t].next_turn()
 
-    def if_dies(self):
-        for c in self.Creature_list:
-            if c.hp <= 0:
-                n = self.Creature_list.index(c)
-                [row, column] = mainfuncs.find_char(n + 1, chars_grid)
-                print(row, column)
-                order = self.order[n]
-                self.kill(c, row, column, order)
-                # chars_grid[row][column] = 0
-                # self.Creature_list.remove(c)
-
-    def kill(self, char, row, column, order):
-        self.Creature_list.remove(char)
-        print('Creature_list in class:', self.Creature_list)
-        self.sprites.remove(char.sprite)
-        chars_grid[row][column] = 0
-        self.fix_init(order)
-
-    def fix_init(self, order):
-        self.order.remove(order)
-        for i in range(len(self.order)):
-            if self.order[i] > order:
-                self.order[i] -= 1
-        print('order in class:', self.order)
+    def update_positions(self):
+        self.positions = []
+        for char in self.Creature_list:
+            self.positions.append(char.position)
 
